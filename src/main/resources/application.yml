@@ -15,5 +15,10 @@ spring:
     console:
       enabled: true
 
+#  security:
+#    user:
+#      name: user
+#      password: 123
+
   application:
     name: MeraTodo
