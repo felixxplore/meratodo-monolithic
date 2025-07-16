@@ -1,17 +1,21 @@
 package com.felix.meratodo.serviceImpl;
 
-import com.felix.meratodo.dto.UserRequestDto;
-import com.felix.meratodo.dto.UserResponseDto;
-import com.felix.meratodo.exception.UserAlreadyExistsException;
-import com.felix.meratodo.mapper.UserMapper;
+
+import com.felix.meratodo.dto.UserLoginDTO;
+import com.felix.meratodo.dto.UserRegistrationDTO;
+import com.felix.meratodo.dto.UserUpdateDTO;
+import com.felix.meratodo.enums.UserRole;
+import com.felix.meratodo.exception.ResourceNotFoundException;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.repository.UserRepository;
 import com.felix.meratodo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,28 +25,65 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private UserMapper userMapper;
+    private JwtServiceImpl jwtService;
 
-    public UserResponseDto createUser(UserRequestDto userRequestDto){
+    @Autowired
+    AuthenticationManager authenticationManager;
 
-       userRepository.findByEmail(userRequestDto.getEmail()).ifPresent(user->{
-           throw new UserAlreadyExistsException(userRequestDto.getEmail());
-       });
+    private final BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder(12);
 
-        User user = userMapper.toUser(userRequestDto);
+    @Override
+    public User register(UserRegistrationDTO dto) {
 
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-        User savedUser = userRepository.save(user);
-        return userMapper.toDto(savedUser);
+        if(userRepository.findByEmail(dto.getEmail()).isPresent()){
+            throw  new IllegalArgumentException("Email already exists");
+        }
+        User user=new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setAvatarUrl(dto.getAvatarUrl());
+        return userRepository.save(user);
+
     }
 
-    public List<UserResponseDto> getAllUsers(){
-        List<UserResponseDto> userResponseDtoList=new ArrayList<>();
-        for (User user : userRepository.findAll()) {
-            userResponseDtoList.add(userMapper.toDto(user));
+    @Override
+    public String login(UserLoginDTO dto) {
+
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword()));
+
+        if(authenticate.isAuthenticated())
+            return jwtService.generateToken(dto.getEmail());
+
+        return "fail";
+    }
+
+    @Override
+    public User updateProfile(Long id, UserUpdateDTO dto ) {
+
+        User user=userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User not found "));
+
+        user.setName(dto.getName());
+        user.setAvatarUrl(dto.getAvatarUrl());
+        user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User updateRole(Long id, String role, User currentUser) {
+
+        if(currentUser.getRole()!= UserRole.ADMIN){
+            throw new SecurityException("Unauthorized");
         }
 
-        return userResponseDtoList;
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setRole(UserRole.valueOf(role));
+        return userRepository.save(user);
+    }
+
+    @Override
+    public List<User> getAllStudents() {
+
+        return userRepository.findAll();
     }
 }
