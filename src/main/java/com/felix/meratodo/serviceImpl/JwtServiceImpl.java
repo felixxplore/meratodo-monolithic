@@ -1,6 +1,5 @@
 package com.felix.meratodo.serviceImpl;
 
-import com.felix.meratodo.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -18,7 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtServiceImpl implements JwtService {
+public class JwtServiceImpl  {
 
 
     private String secretKey="";
@@ -33,7 +32,6 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    @Override
     public String generateToken(String username) {
 
         Map<String, Object> claims=new HashMap<>();

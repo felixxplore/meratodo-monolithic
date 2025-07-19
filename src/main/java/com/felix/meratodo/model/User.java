@@ -31,7 +31,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
-    private UserRole role=UserRole.USER;
+    private UserRole role=UserRole.ADMIN;
 
     @OneToMany(mappedBy = "owner",cascade = CascadeType.ALL)
     private Set<Project> ownedProjects;
@@ -46,5 +46,10 @@ public class User {
     private LocalDateTime createdAt=LocalDateTime.now();
 
     private LocalDateTime updatedAt=LocalDateTime.now();
+
+
+    private String resetToken;
+
+    private Long resetTokenExpiry;
 
 }
