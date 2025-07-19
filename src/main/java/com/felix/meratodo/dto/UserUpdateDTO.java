@@ -1,5 +1,6 @@
 package com.felix.meratodo.dto;
 
+import com.felix.meratodo.enums.UserRole;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -10,4 +11,7 @@ public class UserUpdateDTO {
     private String name;
 
     private String avatarUrl;
+
+    private UserRole role;
+
 }
