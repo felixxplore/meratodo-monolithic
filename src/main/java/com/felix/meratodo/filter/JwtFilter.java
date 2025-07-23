@@ -1,7 +1,7 @@
 package com.felix.meratodo.filter;
 
-import com.felix.meratodo.serviceImpl.JwtServiceImpl;
-import com.felix.meratodo.serviceImpl.MyUserDetailsService;
+import com.felix.meratodo.service.JwtService;
+import com.felix.meratodo.service.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtServiceImpl jwtService;
+    private JwtService jwtService;
 
     @Autowired
     private ApplicationContext context;

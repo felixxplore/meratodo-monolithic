@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -21,15 +22,23 @@ public class Team {
 
     private String description;
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
-    private Set<Project> projects;
+    @ManyToOne
+    @JoinColumn(name = "owner_id",nullable = false)
+    private User owner;
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
-    private Set<TeamMembership> memberships;
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Project> projects=new HashSet<>();
+
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TeamMembership> memberships=new HashSet<>();
 
     @Column(updatable = false)
     private LocalDateTime createdAt=LocalDateTime.now();
 
     private  LocalDateTime updatedAt=LocalDateTime.now();
 
+    @PreUpdate
+    public void preUpdate(){
+        this.updatedAt=LocalDateTime.now();
+    }
 }
