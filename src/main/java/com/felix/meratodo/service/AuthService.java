@@ -1,10 +1,8 @@
-package com.felix.meratodo.serviceImpl;
+package com.felix.meratodo.service;
 
 
 import com.felix.meratodo.dto.UserLoginDTO;
 import com.felix.meratodo.dto.UserRegistrationDTO;
-import com.felix.meratodo.dto.UserUpdateDTO;
-import com.felix.meratodo.exception.ResourceNotFoundException;
 import com.felix.meratodo.model.PasswordResetToken;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.repository.TokenRepository;
@@ -16,19 +14,18 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
-public class AuthServiceImpl   {
+public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private JwtServiceImpl jwtService;
+    private JwtService jwtService;
 
     @Autowired
     private  AuthenticationManager authenticationManager;
@@ -41,8 +38,8 @@ public class AuthServiceImpl   {
 
     private final BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder(12);
 
-
-    public User register(UserRegistrationDTO dto) {
+    // methods
+     public User register(UserRegistrationDTO dto) {
 
         if(userRepository.existsByEmail(dto.getEmail())){
             throw  new IllegalArgumentException("Email already exists");
@@ -67,23 +64,6 @@ public class AuthServiceImpl   {
             return response;
         }
         return null;
-    }
-
-     public User updateProfile(Long id, UserUpdateDTO dto ) {
-
-        User user=userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User not found "));
-
-        user.setName(dto.getName());
-        user.setAvatarUrl(dto.getAvatarUrl());
-        user.setRole(dto.getRole());
-        user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
-    }
-
-
-     public List<User> getAllStudents() {
-
-        return userRepository.findAll();
     }
 
      public void requestPasswordReset(String email) throws MessagingException {

@@ -1,7 +1,7 @@
 package com.felix.meratodo.config;
 
 import com.felix.meratodo.filter.JwtFilter;
-import com.felix.meratodo.serviceImpl.MyUserDetailsService;
+import com.felix.meratodo.service.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

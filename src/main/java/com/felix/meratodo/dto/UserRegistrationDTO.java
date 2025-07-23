@@ -1,6 +1,7 @@
 package com.felix.meratodo.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -8,13 +9,13 @@ import lombok.Data;
 @Data
 public class UserRegistrationDTO {
 
-    @NotNull
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotNull @Email
+    @NotBlank(message="Email is required") @Email
     private String email;
 
-    @NotNull @Size(min = 6)
+    @NotBlank(message = "Password can not be blank or minimum length 6.") @Size(min = 6)
     private String password;
 
     private String avatarUrl;

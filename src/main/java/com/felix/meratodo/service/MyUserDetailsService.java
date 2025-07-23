@@ -1,4 +1,4 @@
-package com.felix.meratodo.serviceImpl;
+package com.felix.meratodo.service;
 
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.model.UserPrinciple;

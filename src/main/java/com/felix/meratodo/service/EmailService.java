@@ -1,4 +1,4 @@
-package com.felix.meratodo.serviceImpl;
+package com.felix.meratodo.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

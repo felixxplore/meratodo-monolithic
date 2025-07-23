@@ -1,4 +1,4 @@
-package com.felix.meratodo.serviceImpl;
+package com.felix.meratodo.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -17,12 +17,12 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtServiceImpl  {
+public class JwtService {
 
 
     private String secretKey="";
 
-    public JwtServiceImpl(){
+    public JwtService(){
         try{
             KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
             SecretKey sk=keyGen.generateKey();
