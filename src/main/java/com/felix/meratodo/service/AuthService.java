@@ -3,6 +3,8 @@ package com.felix.meratodo.service;
 
 import com.felix.meratodo.dto.UserLoginDTO;
 import com.felix.meratodo.dto.UserRegistrationDTO;
+import com.felix.meratodo.dto.UserResponseDto;
+import com.felix.meratodo.mapper.UserMapper;
 import com.felix.meratodo.model.PasswordResetToken;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.repository.TokenRepository;
@@ -38,19 +40,20 @@ public class AuthService {
 
     private final BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder(12);
 
+    @Autowired
+    private UserMapper userMapper;
+
     // methods
-     public User register(UserRegistrationDTO dto) {
+     public UserResponseDto register(UserRegistrationDTO dto) {
 
         if(userRepository.existsByEmail(dto.getEmail())){
             throw  new IllegalArgumentException("Email already exists");
         }
-        User user=new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        return userRepository.save(user);
-
+        User newUser=new User();
+        newUser.setName(dto.getName());
+        newUser.setEmail(dto.getEmail());
+        newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+      return userMapper.toDto(userRepository.save(newUser));
     }
 
      public Map<String, String> login(UserLoginDTO dto) {

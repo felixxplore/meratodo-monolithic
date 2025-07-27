@@ -3,6 +3,7 @@ package com.felix.meratodo.controller;
 import com.felix.meratodo.dto.PasswordResetRequest;
 import com.felix.meratodo.dto.UserLoginDTO;
 import com.felix.meratodo.dto.UserRegistrationDTO;
+import com.felix.meratodo.dto.UserResponseDto;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.service.AuthService;
 import jakarta.mail.MessagingException;
@@ -22,8 +23,8 @@ import org.springframework.web.bind.annotation.*;
 
         // register user
         @PostMapping("/register")
-        public ResponseEntity<User> register(@Valid @RequestBody UserRegistrationDTO dto){
-            return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(dto));
+        public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRegistrationDTO dto){
+            return ResponseEntity.ok(authService.register(dto));
         }
 
         // login user
