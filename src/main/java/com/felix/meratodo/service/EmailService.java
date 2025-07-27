@@ -28,4 +28,19 @@ public class EmailService {
         mailSender.send(message);
 
     }
+
+
+    public void sendTeamInvitationEmail(String to, String inviteUrl, String teamName, String role) throws MessagingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(to);
+        helper.setSubject("Meratodo Team Invitation");
+        helper.setText(
+            "You are invited to join the team: "+teamName+" as a "+role+" role."+
+                    "Click <a href=\""+inviteUrl+"\">here</a> to accept.",true
+        );
+
+        mailSender.send(message);
+    }
 }
