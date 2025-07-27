@@ -3,6 +3,7 @@ package com.felix.meratodo.service;
 import com.felix.meratodo.dto.UserResponseDto;
 import com.felix.meratodo.dto.UserUpdateDTO;
 import com.felix.meratodo.exception.ResourceNotFoundException;
+import com.felix.meratodo.mapper.UserMapper;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,16 +20,21 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<User> getAllStudents() {
-        return userRepository.findAll();
+    @Autowired
+    private UserMapper userMapper;
+
+    public List<UserResponseDto> getAllStudents() {
+        return userMapper.toDto(userRepository.findAll());
     }
-    public User updateProfile(Long id, UserUpdateDTO dto ) {
+    public UserResponseDto updateProfile(Long id, UserUpdateDTO dto ) {
         User user=userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User not found "));
         user.setName(dto.getName());
         user.setAvatarUrl(dto.getAvatarUrl());
         user.setRole(dto.getRole());
         user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        User updatedUser=userRepository.save(user);
+
+        return userMapper.toDto(updatedUser);
     }
 
     public void deleteUserById(Long id) {
@@ -39,16 +46,7 @@ public class UserService {
 
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-         return UserResponseDto.builder()
-                 .id(user.getId())
-                 .name(user.getName())
-                 .email(user.getEmail())
-                 .avatarUrl(user.getAvatarUrl())
-                 .role(user.getRole())
-                 .createdAt(user.getCreatedAt())
-                 .updatedAt(LocalDateTime.now())
-                 .build();
+        return userMapper.toDto(user);
 
     }
 }

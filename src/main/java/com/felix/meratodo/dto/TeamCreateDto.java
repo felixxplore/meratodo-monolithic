@@ -17,7 +17,4 @@ public class TeamCreateDto {
     @NotBlank(message = "Team name must be required")
     private String name;
     private String description;
-    private User owner;
-    private Set<Project> projects;
-    private Set<TeamMembership> memberships;
 }

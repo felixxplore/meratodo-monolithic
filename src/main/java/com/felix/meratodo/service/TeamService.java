@@ -1,8 +1,14 @@
 package com.felix.meratodo.service;
 
+import com.felix.meratodo.dto.ProjectResponseDto;
 import com.felix.meratodo.dto.TeamCreateDto;
+import com.felix.meratodo.dto.TeamMembershipResponseDto;
+import com.felix.meratodo.dto.TeamResponseDto;
 import com.felix.meratodo.enums.TeamRole;
 import com.felix.meratodo.exception.TeamNotFoundException;
+import com.felix.meratodo.mapper.ProjectMapper;
+import com.felix.meratodo.mapper.TeamMapper;
+import com.felix.meratodo.mapper.TeamMembershipMapper;
 import com.felix.meratodo.model.Project;
 import com.felix.meratodo.model.Team;
 import com.felix.meratodo.model.TeamMembership;
@@ -17,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -36,7 +43,17 @@ public class TeamService {
     @Autowired
     private ProjectRepository projectRepository;
 
-    public Team createTeam(TeamCreateDto dto) {
+    @Autowired
+    private TeamMapper teamMapper;
+
+    @Autowired
+    private TeamMembershipMapper teamMembershipMapper;
+
+    @Autowired
+    private ProjectMapper projectMapper;
+
+
+    public TeamResponseDto createTeam(TeamCreateDto dto) {
         User currentUser = getCurrentUser();
         Team team=new Team();
         team.setOwner(currentUser);
@@ -50,22 +67,21 @@ public class TeamService {
         teamMembership.setTeamRole(TeamRole.OWNER);
         teamMembershipRepository.save(teamMembership);
 
-        return team;
-
+        return teamMapper.toDto(team);
     }
 
 
 
-    public Team updateTeamById(Long id, TeamCreateDto dto) {
+    public TeamResponseDto updateTeamById(Long id, TeamCreateDto dto) {
         Team team=teamRepository.findById(id).orElseThrow(()-> new TeamNotFoundException("Team not found."));
 
         team.setName(dto.getName());
 //        team.setOwner(dto.getOwner());
         team.setDescription(dto.getDescription());
-        team.setProjects(dto.getProjects());
-        team.setMemberships(dto.getMemberships());
         team.setUpdatedAt(LocalDateTime.now());
-        return teamRepository.save(team);
+         Team updatedTeam= teamRepository.save(team);
+
+         return teamMapper.toDto(team);
     }
 
     public void deleteTeamById(Long id) {
@@ -75,25 +91,28 @@ public class TeamService {
 
     }
 
-    public List<Team> getMyTeams(){
+    public List<TeamResponseDto> getMyTeams(){
         User currentUser = getCurrentUser();
-        return teamMembershipRepository.findByUserId(currentUser.getId()).stream().map(TeamMembership::getTeam).toList();
+        List<Team> teams=teamMembershipRepository.findByUserId(currentUser.getId()).stream().map(TeamMembership::getTeam).toList();
+
+        return teamMapper.toDto(teams);
     }
 
-    public List<Team> getAllTeams(){
-        return teamRepository.findAll();
+    public List<TeamResponseDto> getAllTeams(){
+       return teamMapper.toDto(teamRepository.findAll());
     }
 
-    public Team getTeamById(Long id){
-        return teamRepository.findById(id).orElseThrow(()-> new TeamNotFoundException("Team not found."));
+    public TeamResponseDto getTeamById(Long id){
+        Team team=teamRepository.findById(id).orElseThrow(()-> new TeamNotFoundException("Team not found."));
+        return teamMapper.toDto(team);
     }
 
-    public List<TeamMembership> getTeamMembersByTeamId(Long teamId){
-        return teamMembershipRepository.findByTeamId(teamId);
+    public List<TeamMembershipResponseDto> getTeamMembersByTeamId(Long teamId){
+        return teamMembershipMapper.toDto(teamMembershipRepository.findByTeamId(teamId));
     }
 
-    public List<Project> getTeamProjects(Long id){
-       return projectRepository.findByTeamId(id);
+    public List<ProjectResponseDto> getTeamProjects(Long id){
+       return projectMapper.toDto(projectRepository.findByTeamId(id));
     }
 
 

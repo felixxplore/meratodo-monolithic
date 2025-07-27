@@ -22,27 +22,27 @@ public class UserController {
 
     // get all Users
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(){
-        return ResponseEntity.status(HttpStatus.FOUND).body(userService.getAllStudents());
+    public ResponseEntity<List<UserResponseDto>> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllStudents());
     }
 
     // delete user by id
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUserById(@RequestParam Long id){
+    public ResponseEntity<String> deleteUserById(@PathVariable Long id){
         userService.deleteUserById(id);
         return  ResponseEntity.ok("User Deleted Successfully");
     }
 
     // update profile
     @PutMapping("/{id}")
-    public  ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto){
-        User user = userService.updateProfile(id, dto);
-        return ResponseEntity.ok(user);
+    public  ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto){
+        UserResponseDto userUpdated= userService.updateProfile(id, dto);
+        return ResponseEntity.ok(userUpdated);
     }
 
     // get user by id
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@RequestParam Long id){
-        return ResponseEntity.status(HttpStatus.FOUND).body(userService.getUserById(id));
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id){
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 }

@@ -31,7 +31,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
-    private UserRole role=UserRole.ADMIN;
+    private UserRole role=UserRole.USER;
 
     @OneToMany(mappedBy = "owner",cascade = CascadeType.ALL)
     private Set<Project> ownedProjects;

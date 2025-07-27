@@ -1,6 +1,9 @@
 package com.felix.meratodo.controller;
 
+import com.felix.meratodo.dto.ProjectResponseDto;
 import com.felix.meratodo.dto.TeamCreateDto;
+import com.felix.meratodo.dto.TeamMembershipResponseDto;
+import com.felix.meratodo.dto.TeamResponseDto;
 import com.felix.meratodo.model.Project;
 import com.felix.meratodo.model.Team;
 import com.felix.meratodo.model.TeamMembership;
@@ -21,12 +24,12 @@ public class TeamController {
     private TeamService teamService;
 
     @PostMapping
-    public ResponseEntity<Team> createTeam(@RequestBody TeamCreateDto dto){
-        return ResponseEntity.status(HttpStatus.CREATED).body(teamService.createTeam(dto));
+    public ResponseEntity<TeamResponseDto> createTeam(@RequestBody TeamCreateDto dto){
+        return ResponseEntity.ok(teamService.createTeam(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Team> updateTeamById(@PathVariable Long id, @RequestBody TeamCreateDto dto){
+    public ResponseEntity<TeamResponseDto> updateTeamById(@PathVariable Long id, @RequestBody TeamCreateDto dto){
         return ResponseEntity.ok(teamService.updateTeamById(id, dto));
     }
 
@@ -37,28 +40,28 @@ public class TeamController {
     }
 
     @GetMapping("/owner-teams")
-    public ResponseEntity<List<Team>>  getMyTeams(){
-        return ResponseEntity.status(HttpStatus.FOUND).body(teamService.getMyTeams());
+    public ResponseEntity<List<TeamResponseDto>>  getMyTeams(){
+        return ResponseEntity.ok(teamService.getMyTeams());
     }
 
     @GetMapping
-     public ResponseEntity<List<Team>> getAllTeams(){
-        return ResponseEntity.status(HttpStatus.FOUND).body(teamService.getAllTeams());
+     public ResponseEntity<List<TeamResponseDto>> getAllTeams(){
+        return ResponseEntity.ok(teamService.getAllTeams());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Team> getTeamById(@PathVariable Long teamId){
-        return ResponseEntity.status(HttpStatus.FOUND).body(teamService.getTeamById(teamId));
+    public ResponseEntity<TeamResponseDto> getTeamById(@PathVariable Long id){
+        return ResponseEntity.ok(teamService.getTeamById(id));
     }
 
     @GetMapping("/{id}/members")
-    public ResponseEntity<List<TeamMembership>> getTeamMembersByTeamId(Long teamId){
-        return ResponseEntity.status(HttpStatus.FOUND).body(teamService.getTeamMembersByTeamId(teamId));
+    public ResponseEntity<List<TeamMembershipResponseDto>> getTeamMembersByTeamId(Long id){
+        return ResponseEntity.ok(teamService.getTeamMembersByTeamId(id));
     }
 
     @GetMapping("/{id}/projects")
-    public ResponseEntity<List<Project>> getTeamProjects(Long teamId){
-        return ResponseEntity.status(HttpStatus.FOUND).body(teamService.getTeamProjects(teamId));
+    public ResponseEntity<List<ProjectResponseDto>> getTeamProjects(Long id){
+        return ResponseEntity.ok(teamService.getTeamProjects(id));
     }
 
 
