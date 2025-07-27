@@ -10,4 +10,8 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     List<TeamMembership> findByUserId(Long userId);
 
     List<TeamMembership> findByTeamId(Long id);
+
+    boolean existsByTeamIdAndUserId(Long teamId, Long userId);
+
+    TeamMembership findByTeamIdAndUserId(Long teamId,Long userId);
 }

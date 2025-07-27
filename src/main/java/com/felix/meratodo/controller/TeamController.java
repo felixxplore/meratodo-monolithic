@@ -1,16 +1,10 @@
 package com.felix.meratodo.controller;
 
-import com.felix.meratodo.dto.ProjectResponseDto;
-import com.felix.meratodo.dto.TeamCreateDto;
-import com.felix.meratodo.dto.TeamMembershipResponseDto;
-import com.felix.meratodo.dto.TeamResponseDto;
-import com.felix.meratodo.model.Project;
-import com.felix.meratodo.model.Team;
-import com.felix.meratodo.model.TeamMembership;
+import com.felix.meratodo.dto.*;
+import com.felix.meratodo.model.TeamInvitation;
 import com.felix.meratodo.service.TeamService;
-import org.apache.coyote.Response;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,5 +58,38 @@ public class TeamController {
         return ResponseEntity.ok(teamService.getTeamProjects(id));
     }
 
+    @PostMapping("/invite")
+    public ResponseEntity<?> inviteMembers(@RequestBody TeamInvitationRequest request) throws MessagingException {
+        teamService.sendInvitation(request);
+        return ResponseEntity.ok("Invitation Sent.");
+    }
 
+    @PostMapping("/invite/accept")
+    public ResponseEntity<?> acceptInvitation(@RequestBody AcceptInvitationRequest request){
+        teamService.acceptInvitation(request.getToken());
+        return ResponseEntity.ok("Invitation Accepted.");
+    }
+
+    @PostMapping("/invite/reject")
+    public ResponseEntity<?> rejectInvitation(@RequestBody AcceptInvitationRequest request){
+        teamService.rejectInvitation(request.getToken());
+        return ResponseEntity.ok("Invitation Rejected");
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> updateMemberRole(@PathVariable  Long id, UpdateMemberRoleRequest request){
+        teamService.updateMemberRole(id,request);
+        return ResponseEntity.ok("Role Updated.");
+    }
+
+    @DeleteMapping("/{id}/member/{userId}")
+    public ResponseEntity<?> removeMember(@PathVariable Long id, @PathVariable Long userId){
+        teamService.removeMember(id,userId);
+        return ResponseEntity.ok("Member removed");
+    }
+
+    @GetMapping("/{id}/invitations")
+    public ResponseEntity<List<TeamInvitation>> getPendingInvitations(@PathVariable Long id){
+       return ResponseEntity.ok(teamService.getPendingInvitations(id));
+    }
 }
