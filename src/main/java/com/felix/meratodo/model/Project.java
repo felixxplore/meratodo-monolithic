@@ -25,9 +25,9 @@ public class Project {
 
     private LocalDateTime deadline;
 
-    @Enumerated(EnumType.STRING)
+
     @Column(nullable=false)
-    private ProjectPermission permission=ProjectPermission.PRIVATE;
+    private boolean isPublic;
 
     private boolean isArchived=false;
 

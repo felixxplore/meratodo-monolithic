@@ -49,7 +49,7 @@ public class TeamService {
     private EmailService emailService;
 
     public TeamResponseDto createTeam(TeamCreateDto dto) {
-        User currentUser = getCurrentUser();
+        User currentUser = UserService.getCurrentUser();
         Team team=new Team();
         team.setOwner(currentUser);
         team.setName(dto.getName());
@@ -87,7 +87,7 @@ public class TeamService {
     }
 
     public List<TeamResponseDto> getMyTeams(){
-        User currentUser = getCurrentUser();
+        User currentUser = UserService.getCurrentUser();
         List<Team> teams=teamMembershipRepository.findByUserId(currentUser.getId()).stream().map(TeamMembership::getTeam).toList();
 
         return teamMapper.toDto(teams);
@@ -110,11 +110,7 @@ public class TeamService {
        return projectMapper.toDto(projectRepository.findByTeamId(id));
     }
 
-    public User getCurrentUser(){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("User not found."));
 
-    }
 
     public void sendInvitation(TeamInvitationRequest request) throws MessagingException {
         // check team exist or not
