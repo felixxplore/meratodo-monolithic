@@ -18,4 +18,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
+    @ExceptionHandler(ProjectNotFoundException.class)
+    public ResponseEntity<String>  handleProjectNotFoundException(ProjectNotFoundException ex){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
 }

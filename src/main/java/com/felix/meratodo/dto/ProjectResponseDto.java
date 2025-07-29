@@ -15,6 +15,7 @@ public class ProjectResponseDto {
     private boolean isArchived;
     private UserResponseDto owner;
     private TeamResponseDto team;
+    private boolean isPublic;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

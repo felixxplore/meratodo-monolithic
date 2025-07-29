@@ -7,6 +7,7 @@ import com.felix.meratodo.mapper.UserMapper;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ import java.util.List;
 public class UserService {
 
     @Autowired
-    private UserRepository userRepository;
+    private static UserRepository userRepository;
 
     @Autowired
     private UserMapper userMapper;
@@ -47,6 +48,11 @@ public class UserService {
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return userMapper.toDto(user);
+
+    }
+    public static User getCurrentUser(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("User not found."));
 
     }
 }
