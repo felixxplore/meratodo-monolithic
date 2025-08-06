@@ -42,6 +42,7 @@ public abstract class TaskMapper {
     @Mapping(source = "assigneesIds",target = "assignees", qualifiedByName = "mapIdsToAssignees")
     public abstract  Task toEntity(TaskRequestDto dto);
 
+    @Named("mapIdsToAssignees")
     protected Set<User> mapIdsToAssignees(List<Long> ids){
 
         return new HashSet<>(userRepository.findAllById(ids));

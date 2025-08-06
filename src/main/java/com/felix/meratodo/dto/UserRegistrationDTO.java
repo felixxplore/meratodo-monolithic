@@ -18,6 +18,5 @@ public class UserRegistrationDTO {
     @NotBlank(message = "Password can not be blank or minimum length 6.") @Size(min = 6)
     private String password;
 
-    private String avatarUrl;
 
 }

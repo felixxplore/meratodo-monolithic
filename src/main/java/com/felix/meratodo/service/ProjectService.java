@@ -3,6 +3,7 @@ package com.felix.meratodo.service;
 import com.felix.meratodo.dto.ProjectRequestDto;
 import com.felix.meratodo.dto.ProjectResponseDto;
 import com.felix.meratodo.dto.TaskResponseDto;
+import com.felix.meratodo.exception.ProjectAlreadyExistsException;
 import com.felix.meratodo.exception.ProjectNotFoundException;
 import com.felix.meratodo.exception.TeamNotFoundException;
 import com.felix.meratodo.mapper.ProjectMapper;
@@ -37,6 +38,9 @@ public class ProjectService {
 
     @Autowired
     private ProjectMapper projectMapper;
+
+    @Autowired
+    private UserService userService;
     public ProjectResponseDto createProject(ProjectRequestDto dto) {
         return   projectMapper.toDto(projectRepository.save(projectMapper.toEntity(dto)));
     }
@@ -96,7 +100,7 @@ public class ProjectService {
         Project project=projectMapper.toEntity(getProjectById(id));
 
         if(project.isArchived()){
-            throw new RuntimeException("Project is already in archived");
+            throw new ProjectAlreadyExistsException("Project is already in archived");
         }
 
         project.setArchived(true);
@@ -104,7 +108,7 @@ public class ProjectService {
     }
 
     public List<ProjectResponseDto> getMyProjects() {
-        User currentUser = UserService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
        List<Project> projects= projectRepository.findAllByOwnerId(currentUser.getId());
 
        return projectMapper.toDto(projects);
