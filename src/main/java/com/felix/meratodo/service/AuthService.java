@@ -4,6 +4,8 @@ package com.felix.meratodo.service;
 import com.felix.meratodo.dto.UserLoginDTO;
 import com.felix.meratodo.dto.UserRegistrationDTO;
 import com.felix.meratodo.dto.UserResponseDto;
+import com.felix.meratodo.exception.InvalidTokenException;
+import com.felix.meratodo.exception.UserAlreadyExistsException;
 import com.felix.meratodo.mapper.UserMapper;
 import com.felix.meratodo.model.PasswordResetToken;
 import com.felix.meratodo.model.User;
@@ -47,7 +49,7 @@ public class AuthService {
      public UserResponseDto register(UserRegistrationDTO dto) {
 
         if(userRepository.existsByEmail(dto.getEmail())){
-            throw  new IllegalArgumentException("Email already exists");
+            throw  new UserAlreadyExistsException(dto.getEmail());
         }
         User newUser=new User();
         newUser.setName(dto.getName());
@@ -87,7 +89,7 @@ public class AuthService {
 
      public void resetPassword(String token, String newPassword) {
 
-         PasswordResetToken resetToken = tokenRepository.findByToken(token).orElseThrow(()-> new RuntimeException("Invalid Token"));
+         PasswordResetToken resetToken = tokenRepository.findByToken(token).orElseThrow(()-> new InvalidTokenException("Invalid Token"));
 
          if(resetToken.isExpired()){
              throw new RuntimeException("Token expired");

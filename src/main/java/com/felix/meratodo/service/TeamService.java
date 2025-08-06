@@ -2,7 +2,7 @@ package com.felix.meratodo.service;
 
 import com.felix.meratodo.dto.*;
 import com.felix.meratodo.enums.TeamRole;
-import com.felix.meratodo.exception.TeamNotFoundException;
+import com.felix.meratodo.exception.*;
 import com.felix.meratodo.mapper.ProjectMapper;
 import com.felix.meratodo.mapper.TeamMapper;
 import com.felix.meratodo.mapper.TeamMembershipMapper;
@@ -48,8 +48,11 @@ public class TeamService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UserService userService;
+
     public TeamResponseDto createTeam(TeamCreateDto dto) {
-        User currentUser = UserService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         Team team=new Team();
         team.setOwner(currentUser);
         team.setName(dto.getName());
@@ -87,7 +90,7 @@ public class TeamService {
     }
 
     public List<TeamResponseDto> getMyTeams(){
-        User currentUser = UserService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         List<Team> teams=teamMembershipRepository.findByUserId(currentUser.getId()).stream().map(TeamMembership::getTeam).toList();
 
         return teamMapper.toDto(teams);
@@ -120,7 +123,7 @@ public class TeamService {
         TeamRole role = TeamRole.valueOf(roleStr.toUpperCase());
 
         if(role == TeamRole.OWNER){
-            throw new RuntimeException("Cannot Invite as Owner");
+            throw new CanNotInviteAsOwnerException("Cannot Invite as Owner");
         }
 
         String token= UUID.randomUUID().toString();
@@ -142,11 +145,11 @@ public class TeamService {
     public TeamInvitation verifyToken(String token){
         TeamInvitation teamInvitation = teamInvitationRepository.findByToken(token);
         if(teamInvitation== null){
-            throw new RuntimeException("Invalid or Expired token.");
+            throw new InvalidTokenException("Invalid  token.");
         }
 
         if(teamInvitation.isExpired() || teamInvitation.isAccepted()){
-            throw new RuntimeException("Invalid or Expired token.");
+            throw new InvalidTokenException("Invalid token.");
         }
 
         return teamInvitation;
@@ -161,7 +164,7 @@ public class TeamService {
 
         // if this true that means user already in team
         if(teamMembershipRepository.existsByTeamIdAndUserId(teamInvitation.getTeam().getId(),user.getId())){
-            throw new RuntimeException("User already exists in team.");
+            throw new UserAlreadyExistsException("User already exists in team.");
         }
 
         TeamMembership teamMembership=new TeamMembership();
@@ -179,7 +182,7 @@ public class TeamService {
     public void rejectInvitation(String token){
         TeamInvitation teamInvitation = teamInvitationRepository.findByToken(token);
         if(teamInvitation==null){
-            throw new RuntimeException("invalid or expired token.");
+            throw new InvalidTokenException("invalid token.");
         }
 
         teamInvitation.setAccepted(true);
@@ -192,13 +195,13 @@ public class TeamService {
         User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found."));
         TeamMembership membership=teamMembershipRepository.findByTeamIdAndUserId(team.getId(),user.getId());
         if(membership==null){
-            throw new RuntimeException("User not in team.");
+            throw new UserNotInTeamException("User not in team.");
         }
 
         String teamRole = request.getTeamRole().toUpperCase();
         TeamRole newRole = TeamRole.valueOf(teamRole);
         if(  newRole == TeamRole.OWNER){
-            throw new RuntimeException("Cannot assign OWNER role");
+            throw new CanNotAssignOwnerRoleException("Cannot assign OWNER role");
         }
         membership.setTeamRole(newRole);
         teamMembershipRepository.save(membership);
@@ -207,11 +210,11 @@ public class TeamService {
     public void removeMember(Long teamId, Long userId){
            TeamMembership teamMembership = teamMembershipRepository.findByTeamIdAndUserId(teamId, userId);
            if(teamMembership==null){
-               throw new RuntimeException("User not in team.");
+               throw new UserNotInTeamException("User not in team.");
            }
 
            if(teamMembership.getTeamRole()== TeamRole.OWNER){
-               throw new RuntimeException("Cannot remove team owner");
+               throw new CanNotRemoveTeamOwnerException("Cannot remove team owner");
            }
 
            teamMembershipRepository.delete(teamMembership);

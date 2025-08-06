@@ -17,6 +17,7 @@ import com.felix.meratodo.repository.TaskRepository;
 import com.felix.meratodo.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,6 +44,9 @@ public class TaskService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private UserService userService;
 
     public TaskResponseDto createTask(TaskRequestDto dto) {
         return taskMapper.toDto(taskRepository.save(taskMapper.toEntity(dto)));
@@ -76,7 +80,7 @@ public class TaskService {
 
     public void assignTaskToMember(Long taskId, Long userId) throws MessagingException {
         Task task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException("task not found."));
-        User user=userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User not found "));
+        User user=userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("User not found "));
         
         task.getAssignees().add(user);
         Task updatedTask=taskRepository.save(task);
@@ -100,7 +104,7 @@ public class TaskService {
     }
 
     public List<TaskResponseDto> getMyTasks() {
-        User currentUser = UserService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         List<Task> tasks = taskRepository.findByAssigneesId(currentUser.getId());
         return taskMapper.toDtoList(tasks);
     }

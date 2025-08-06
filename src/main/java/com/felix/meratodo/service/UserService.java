@@ -19,7 +19,7 @@ import java.util.List;
 public class UserService {
 
     @Autowired
-    private static UserRepository userRepository;
+    private  UserRepository userRepository;
 
     @Autowired
     private UserMapper userMapper;
@@ -28,7 +28,7 @@ public class UserService {
         return userMapper.toDto(userRepository.findAll());
     }
     public UserResponseDto updateProfile(Long id, UserUpdateDTO dto ) {
-        User user=userRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("User not found "));
+        User user=userRepository.findById(id).orElseThrow(()-> new UsernameNotFoundException("User not found "));
         user.setName(dto.getName());
         user.setAvatarUrl(dto.getAvatarUrl());
         user.setRole(dto.getRole());
@@ -50,7 +50,7 @@ public class UserService {
         return userMapper.toDto(user);
 
     }
-    public static User getCurrentUser(){
+    public  User getCurrentUser(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("User not found."));
 
