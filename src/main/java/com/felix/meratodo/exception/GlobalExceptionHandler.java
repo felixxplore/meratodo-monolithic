@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CanNotRemoveTeamOwnerException.class)
     public ResponseEntity<ErrorResponse> handleCanNotRemoveTeamOwnerException(CanNotRemoveTeamOwnerException ex, HttpServletRequest request){
-        return buildErrorResponse((ex.getMessage(), HttpStatus.FORBIDDEN, request.getRequestURI()));
+        return buildErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, request.getRequestURI());
     }
 
     @ExceptionHandler(UserNotInTeamException.class)
