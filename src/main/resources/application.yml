@@ -3,18 +3,17 @@ spring:
     url: jdbc:mysql://localhost:3306/meratodo
     username: root
     password: felix137
-#    driver-class-name: org.h2.Driver
-
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
       ddl-auto: update
     show-sql: true
-
   h2:
     console:
       enabled: true
-
+  redis:
+    host: localhost
+    port: 6379
   mail:
     host: smtp.gmail.com
     port: 587
@@ -27,16 +26,19 @@ spring:
            starttls:
              enable: true
              required: true
-
-
-#  security:
-#    user:
-#      name: user
-#      password: 123
-
-  application:
-    name: MeraTodo
-
+app:
+  base-url: http://localhost:8080
+#  jwt:
+#    access-token-expiry: 15m
+#    refresh-token-expiry: 7d
+#    secret-key: ${JWT_SECRET_KEY}
+oauth2:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+  github:
+    client-id: ${GITHUB_CLIENT_ID}
+    client-secret: ${GITHUB_CLIENT_SECRET}
 springdoc:
   swagger-ui:
     path: /docs
