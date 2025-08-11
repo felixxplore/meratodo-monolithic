@@ -52,4 +52,14 @@ public class User {
 
     private Long resetTokenExpiry;
 
+    private boolean emailVarified=false;
+    private boolean mfaEnabled=false;
+    private String totpSecret;
+    private int failedLoginAttempts=0;
+    private Long lockedUntil;
+
+
+
+
+
 }

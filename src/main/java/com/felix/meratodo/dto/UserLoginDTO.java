@@ -16,4 +16,6 @@ public class UserLoginDTO {
     @NotNull
     @Schema(description = "password required for login", example = "xyz123")
     private String password;
+
+    private String totp;
 }

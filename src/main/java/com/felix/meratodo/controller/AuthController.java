@@ -1,9 +1,6 @@
 package com.felix.meratodo.controller;
 
-import com.felix.meratodo.dto.PasswordResetRequest;
-import com.felix.meratodo.dto.UserLoginDTO;
-import com.felix.meratodo.dto.UserRegistrationDTO;
-import com.felix.meratodo.dto.UserResponseDto;
+import com.felix.meratodo.dto.*;
 import com.felix.meratodo.model.User;
 import com.felix.meratodo.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,8 +24,15 @@ import org.springframework.web.bind.annotation.*;
         // register user
         @PostMapping("/register")
         @Operation(summary = "register user or user signup")
-        public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRegistrationDTO dto){
+        public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationDTO dto){
             return ResponseEntity.ok(authService.register(dto));
+        }
+
+        @PostMapping("/verify-email")
+        @Operation(summary = "verify email")
+        public ResponseEntity<?> verifyEmail(@RequestParam String token){
+            authService.verifyEmail(token);
+            return ResponseEntity.ok("Email Verified Successfully");
         }
 
         // login user
