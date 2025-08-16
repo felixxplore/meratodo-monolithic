@@ -1,6 +1,9 @@
 package com.felix.meratodo.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -69,10 +72,26 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND, request.getRequestURI());
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailNotVerifiedException(EmailNotVerifiedException ex, HttpServletRequest request, HttpServletResponse response){
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT, request.getRequestURI());
+    }
+
+    @ExceptionHandler(UserMfaNotEnabledException.class)
+    public ResponseEntity<ErrorResponse> handleUserMfaNotEnabledException(UserMfaNotEnabledException ex, HttpServletRequest request, HttpServletResponse response){
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT, request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOtpException(InvalidOtpException ex, HttpServletRequest request, HttpServletResponse response){
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT, request.getRequestURI());
+    }
+
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status, String path) {
-
         ErrorResponse errorResponse=new ErrorResponse(status.value(), status.getReasonPhrase(),message, LocalDateTime.now(),path);
-
         return ResponseEntity.status(status).body(errorResponse);
     }
+
+
 }

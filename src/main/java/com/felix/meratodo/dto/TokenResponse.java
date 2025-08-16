@@ -4,9 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
 public class TokenResponse {
 
-    String accessToken;
-    String refreshToken;
+   private String message;
+   private  String accessToken;
+   private String refreshToken;
+
+   public TokenResponse(String message){
+      this.message=message;
+   }
+   public  TokenResponse(String accessToken,String refreshToken){
+      this.accessToken=accessToken;
+      this.refreshToken=refreshToken;
+   }
 }

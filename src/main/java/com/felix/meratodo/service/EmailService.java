@@ -20,48 +20,39 @@ public class EmailService {
         this.mailSender=mailSender;
     }
 
-    public void sendPasswordResetEmail(String to, String token) throws MessagingException {
+
+    public void sendEmail(String to, String subject, String bodyHtml) throws MessagingException {
+
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(to);
-        helper.setSubject("MeraTodo Password Reset");
-        String resetUrl="http://localhost:8080/reset-password?token="+token;
-        helper.setText("Click <a href=\"" + resetUrl + "\">here</a> to reset your password.", true);
+        helper.setSubject(subject);
+        helper.setText(bodyHtml, true);
         mailSender.send(message);
     }
 
-    public void sendTeamInvitationEmail(String to, String inviteUrl, String teamName, String role) throws MessagingException {
+    public void sendPasswordResetEmail(String to, String token) throws MessagingException {
+        String resetUrl="http://localhost:8080/reset-password?token="+token;
+        sendEmail(to,"MeraTodo Password Reset", "Click <a href=\"" + resetUrl + "\">here</a> to reset your password.");
+    }
 
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setTo(to);
-        helper.setSubject("MeraTodo Team Invitation");
-        helper.setText(
-            "You are invited to join the team: "+teamName+" as a "+role+" role."+
-                    "Click <a href=\""+inviteUrl+"\">here</a> to accept.",true
-        );
-        mailSender.send(message);
+    public void sendTeamInvitationEmail(String to, String inviteUrl, String teamName, String role) throws MessagingException {
+        sendEmail(to,"MeraTodo Team Invitation",    "You are invited to join the team: "+teamName+" as a "+role+" role."+
+                "Click <a href=\""+inviteUrl+"\">here</a> to accept.");
     }
 
 
     public void sendTaskAssignmentEmail(String to, String taskTitle, String projectName) throws MessagingException {
-
-        MimeMessage message= mailSender.createMimeMessage();
-        MimeMessageHelper helper=new MimeMessageHelper(message, true);
-        helper.setTo(to);
-        helper.setSubject("MeraTodo Task Assignment");
-        helper.setText("You have been assigned to task: "+taskTitle+" in project: "+projectName, true);
-        mailSender.send(message);
+        sendEmail(to, "MeraTodo Task Assignment","You have been assigned to task: "+taskTitle+" in project: "+projectName);
     }
 
-    public void sendVerificationEmail(String email, String token) throws MessagingException {
-
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setTo(email);
-        helper.setSubject("MeraTodo Email Verification");
+    public void sendVerificationEmail(String to, String token) throws MessagingException {
         String verificationUrl= baseUrl + "/api/auth/verify-email?token="+token;
-        helper.setText("<h1>Verify Your Email</h1><p>Click  <a href=\"" + verificationUrl + "\">to verify your email</p>", true);
-        mailSender.send(message);
+        sendEmail(to, "MeraTodo Email Verification", "<h1>Verify Your Email</h1><p>Click  <a href=\"" + verificationUrl + "\">to verify your email</p>" );
+    }
+
+    public void sendOtpEmail(String to, String otp) throws MessagingException {
+        sendEmail(to,"MeraTodo OTP Verification", "<h2>Your OTP code </h2> <p> <b>"+otp+"</b> </p>"+"<p> Your OTP code expire within  5 minutes </p>");
+
     }
 }

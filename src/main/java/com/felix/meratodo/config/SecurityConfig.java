@@ -2,11 +2,14 @@ package com.felix.meratodo.config;
 
 import com.felix.meratodo.filter.JwtAuthenticationFilter;
 import com.felix.meratodo.filter.RateLimitFilter;
-import com.felix.meratodo.service.AuthService;
+import com.felix.meratodo.security.handler.CustomOAuth2SuccessHandler;
+import com.felix.meratodo.service.JwtService;
 import com.felix.meratodo.service.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,24 +25,46 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+import java.util.Map;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final UserDetailsServiceImpl userDetailsService;
+    private final JwtService jwtService;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final RateLimitFilter rateLimitFilter;
+    private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
 
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService, JwtService jwtService,
+                          RedisTemplate<String, String> redisTemplate, RateLimitFilter rateLimitFilter,
+                          @Lazy CustomOAuth2SuccessHandler customOAuth2SuccessHandler) {
+        this.userDetailsService = userDetailsService;
+        this.jwtService = jwtService;
+        this.redisTemplate = redisTemplate;
+        this.rateLimitFilter = rateLimitFilter;
+        this.customOAuth2SuccessHandler = customOAuth2SuccessHandler;
+    }
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    // ✅ Make JwtAuthenticationFilter a bean
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService, redisTemplate);
+    }
+    @Bean
+    public AuthenticationProvider authenticationProvider(){
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+        provider.setUserDetailsService(userDetailsService);
+        return provider;
+    }
 
-    @Autowired
-    private AuthService authService;
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Autowired
-    private RateLimitFilter rateLimitFilter;
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -65,29 +90,12 @@ public class SecurityConfig {
                         .userInfoEndpoint(userinfo-> userinfo
                                 .oidcUserService(new OidcUserService())
                                 .userService(new DefaultOAuth2UserService()))
-                        .successHandler(((request, response, authentication) -> {
-                            com.felix.meratodo.dto.TokenResponse tokens=authService.handleOAuth2Login(authentication.getName(), authentication.getDetails());
-                            response.sendRedirect("/api/auth/oauth2/success?accessToken="+tokens.getAccessToken()+"&refreshToken="+tokens.refreshToken());
-                        })))
-                .addFilterBefore(rateLimitFilter,JwtAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                        .successHandler(customOAuth2SuccessHandler))
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore( jwtAuthenticationFilter(),
+                         UsernamePasswordAuthenticationFilter.class)
                 .build();
      }
-
-
-    @Bean
-    public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
-        provider.setUserDetailsService(userDetailsService);
-        return provider;
-    }
-
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
 
 
 }
