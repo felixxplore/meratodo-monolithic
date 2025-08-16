@@ -6,31 +6,29 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
- import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+public class JwtAuthenticationFilter extends OncePerRequestFilter  {
 
-    @Autowired
-    private ApplicationContext context;
+    private final JwtService jwtService;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsService,
+                                   RedisTemplate<String, String> redisTemplate ) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.redisTemplate = redisTemplate;
+     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -46,39 +44,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String authHeader = request.getHeader("Authorization");
-        String username=null;
-        String token=null;
 
-        if(authHeader!=null && authHeader.startsWith("Bearer ")){
-              token = authHeader.substring(7);
-              username=jwtService.getUsernameFromToken(token);
-        }
-
-        if(redisTemplate.opsForValue().get(token)!=null){
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token is revoked");
+        if(authHeader==null || !authHeader.startsWith("Bearer ")){
             return;
         }
 
-//        if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null){
-//            UserDetails userDetails= context.getBean(UserDetailsServiceImpl.class).loadUserByUsername(username);
-//
-//             if(jwtService.validateToken(token,userDetails)){
-//
-//                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//                SecurityContextHolder.getContext().setAuthentication(authToken);
-//             }
-//        }
+        String token = authHeader.replace("Bearer ", "");
 
-        if(jwtService.validateToken(token)){
-            String email= jwtService.getUsernameFromToken(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+        if(redisTemplate.opsForValue().get("blacklist:access:"+token)!=null || redisTemplate.opsForValue().get("blacklist:refresh:"+token)!=null){
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token has been revoked");
+            return;
+        }
+
+        try{
+            String username=jwtService.getUsernameFromToken(token);
+            if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (jwtService.validateToken(token)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        }catch (Exception e){
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid or expired token");
+            return;
         }
 
         filterChain.doFilter(request,response);
     }
+
 }
