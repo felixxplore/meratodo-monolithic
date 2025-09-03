@@ -1,9 +1,8 @@
 package com.felix.meratodo.dto;
 
-import com.felix.meratodo.enums.TeamRole;
+ import com.felix.meratodo.enums.TeamRole;
 import com.felix.meratodo.model.Team;
-import com.felix.meratodo.model.User;
-import lombok.Data;
+ import lombok.Data;
 
 import java.time.LocalDateTime;
 

@@ -3,12 +3,16 @@ package com.felix.meratodo.controller;
 import com.felix.meratodo.dto.ProjectRequestDto;
 import com.felix.meratodo.dto.ProjectResponseDto;
 import com.felix.meratodo.dto.TaskResponseDto;
+import com.felix.meratodo.model.User;
 import com.felix.meratodo.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.coyote.Response;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,12 +27,15 @@ public class ProjectController {
 
     @PostMapping
     @Operation(summary = "create new project")
-    public ResponseEntity<ProjectResponseDto> createProject(@RequestBody ProjectRequestDto dto){
-        return ResponseEntity.ok(projectService.createProject(dto));
+    @PreAuthorize("hasPermission(null, 'PROJECT', 'CREATE')")
+    public ResponseEntity<ProjectResponseDto> createProject(@RequestBody ProjectRequestDto dto, Authentication authentication){
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(projectService.createProject(dto, user.getId()));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "update project by id")
+    @PreAuthorize("hasPermission(#id, 'PROJECT', 'UPDATE')")
     public ResponseEntity<ProjectResponseDto> updateProjectById(@PathVariable Long id, @RequestBody ProjectRequestDto dto){
         return ResponseEntity.ok(projectService.updateProjectById(id,dto));
     }

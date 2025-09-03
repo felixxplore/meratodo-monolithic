@@ -1,6 +1,6 @@
 package com.felix.meratodo.model;
 
-import com.felix.meratodo.enums.TeamRole;
+ import com.felix.meratodo.enums.TeamRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

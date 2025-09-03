@@ -1,6 +1,7 @@
 package com.felix.meratodo.service;
 
 import com.felix.meratodo.dto.*;
+
 import com.felix.meratodo.enums.TeamRole;
 import com.felix.meratodo.exception.*;
 import com.felix.meratodo.mapper.ProjectMapper;
@@ -10,13 +11,12 @@ import com.felix.meratodo.model.*;
 import com.felix.meratodo.repository.*;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.lang.constant.Constable;
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static com.felix.meratodo.enums.TeamRole.OWNER;
 
 @Service
 public class TeamService {
@@ -62,7 +62,7 @@ public class TeamService {
         TeamMembership teamMembership=new TeamMembership();
         teamMembership.setUser(currentUser);
         teamMembership.setTeam(team);
-        teamMembership.setTeamRole(TeamRole.OWNER);
+        teamMembership.setTeamRole(OWNER);
         teamMembershipRepository.save(teamMembership);
 
         return teamMapper.toDto(team);
@@ -122,7 +122,7 @@ public class TeamService {
         String roleStr = request.getTeamRole() != null ? request.getTeamRole() : "VIEWER";
         TeamRole role = TeamRole.valueOf(roleStr.toUpperCase());
 
-        if(role == TeamRole.OWNER){
+        if(role == OWNER){
             throw new CanNotInviteAsOwnerException("Cannot Invite as Owner");
         }
 
@@ -193,31 +193,31 @@ public class TeamService {
     public void updateMemberRole(Long teamId,  UpdateMemberRoleRequest request){
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new TeamNotFoundException("Team not found."));
         User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found."));
-        TeamMembership membership=teamMembershipRepository.findByTeamIdAndUserId(team.getId(),user.getId());
-        if(membership==null){
-            throw new UserNotInTeamException("User not in team.");
-        }
 
-        String teamRole = request.getTeamRole().toUpperCase();
-        TeamRole newRole = TeamRole.valueOf(teamRole);
-        if(  newRole == TeamRole.OWNER){
-            throw new CanNotAssignOwnerRoleException("Cannot assign OWNER role");
-        }
-        membership.setTeamRole(newRole);
-        teamMembershipRepository.save(membership);
+
+        teamMembershipRepository.findByTeamIdAndUserId(team.getId(), user.getId())
+                .map(m -> {
+                    TeamRole newRole = TeamRole.valueOf(request.getTeamRole().toUpperCase());
+                    if (newRole == TeamRole.OWNER) {
+                        throw new CanNotAssignOwnerRoleException("Cannot assign OWNER role");
+                    }
+                    m.setTeamRole(newRole);
+                    return teamMembershipRepository.save(m);
+                })
+                .orElseThrow(() -> new UserNotInTeamException("User not in team."));
+
     }
 
     public void removeMember(Long teamId, Long userId){
-           TeamMembership teamMembership = teamMembershipRepository.findByTeamIdAndUserId(teamId, userId);
-           if(teamMembership==null){
-               throw new UserNotInTeamException("User not in team.");
-           }
-
-           if(teamMembership.getTeamRole()== TeamRole.OWNER){
-               throw new CanNotRemoveTeamOwnerException("Cannot remove team owner");
-           }
-
-           teamMembershipRepository.delete(teamMembership);
+        teamMembershipRepository.findByTeamIdAndUserId(teamId, userId)
+                .ifPresentOrElse(membership -> {
+                    if (membership.getTeamRole() == OWNER) {
+                        throw new CanNotRemoveTeamOwnerException("Cannot remove team owner");
+                    }
+                    teamMembershipRepository.delete(membership);
+                }, () -> {
+                    throw new UserNotInTeamException("User not in team.");
+                });
     }
 
 

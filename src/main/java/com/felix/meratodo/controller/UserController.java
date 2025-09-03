@@ -3,16 +3,18 @@ package com.felix.meratodo.controller;
 
 import com.felix.meratodo.dto.UserResponseDto;
 import com.felix.meratodo.dto.UserUpdateDTO;
-import com.felix.meratodo.model.User;
 import com.felix.meratodo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user")
 @Tag(name="User APIs", description = "User Management")
+@Slf4j
 public class UserController {
 
     @Autowired
@@ -32,8 +35,11 @@ public class UserController {
             description = "successfully get all users"
     )
     @Operation(summary = "get all users")
-    public ResponseEntity<List<UserResponseDto>> getAllUsers(){
-        return ResponseEntity.ok(userService.getAllStudents());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable){
+        log.info("Fetching users with pageable: {}", pageable);
+         Page<UserResponseDto> allUsers = userService.getAllUsers(pageable);
+        return ResponseEntity.ok(allUsers);
     }
 
     // delete user by id

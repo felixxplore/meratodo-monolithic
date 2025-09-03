@@ -2,14 +2,13 @@ package com.felix.meratodo.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.Email;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
@@ -87,8 +86,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT, request.getRequestURI());
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request){
+        return buildErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN, request.getRequestURI());
+    }
 
-    private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status, String path) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request){
+        return buildErrorResponse("Unexpected error occured : "+ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, request.getRequestURI());
+    }
+
+
+     private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status, String path) {
         ErrorResponse errorResponse=new ErrorResponse(status.value(), status.getReasonPhrase(),message, LocalDateTime.now(),path);
         return ResponseEntity.status(status).body(errorResponse);
     }

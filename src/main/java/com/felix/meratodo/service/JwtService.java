@@ -5,12 +5,15 @@ import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Jwts;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class JwtService {
@@ -21,52 +24,69 @@ public class JwtService {
 
     private final String refreshTokenExpiry=dotenv.get("APP_JWT_REFRESH_TOKEN_EXPIRY");
 
+
+    private PrivateKey privateKey; // to store the private key
+
     @Getter
-    private KeyPair keyPair;
+    private PublicKey publicKey; // to store the public key
+
+    @Getter
+    private final String keyId=UUID.randomUUID().toString(); // unique id for key pair (for rotation)
 
     @PostConstruct
     public void init(){
-        try{
-            KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
-            keyPairGen.initialize(2048); // 2048 bit key
-            this.keyPair=keyPairGen.generateKeyPair();
-        }catch (NoSuchAlgorithmException ex){
-            throw new RuntimeException(ex);
+        try {
+            // Load from classpath
+            String privateKeyPem = new String(new ClassPathResource("keys/private_key.pem").getInputStream().readAllBytes())
+                    .replace("-----BEGIN PRIVATE KEY-----", "")
+                    .replace("-----END PRIVATE KEY-----", "")
+                    .replaceAll("\\s", "");
+            String publicKeyPem = new String(new ClassPathResource("keys/public_key.pem").getInputStream().readAllBytes())
+                    .replace("-----BEGIN PUBLIC KEY-----", "")
+                    .replace("-----END PUBLIC KEY-----", "")
+                    .replaceAll("\\s", "");
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyPem)));
+            publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyPem)));
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to load keys", ex);
         }
     }
 
     public String generateAccessToken(User user){
         long expiry = parseDuration(accessTokenExpiry);
         return Jwts.builder()
+                .header().add("kid", keyId).and()
                 .subject(user.getEmail())
                 .claim("role",user.getRole())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiry))
-                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
+                .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
 
     public String generateRefreshToken(User user){
         long expiry=parseDuration(refreshTokenExpiry);
         return Jwts.builder()
+                .header().add("kid",keyId).and()
                 .subject(user.getEmail())
                 .claim("role",user.getRole())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis()+ expiry))
-                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
+                .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
 
     public String getUsernameFromToken(String token){
 
-        return Jwts.parser().verifyWith(keyPair.getPublic()).build().parseSignedClaims(token).getPayload().getSubject();
+        return Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(token).getPayload().getSubject();
 
     }
 
     public boolean validateToken(String token){
 
       try {Jwts.parser()
-                .verifyWith(keyPair.getPublic())
+                .verifyWith(publicKey)
                 .build()
                 .parseSignedClaims(token);
             return true;

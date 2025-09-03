@@ -3,6 +3,8 @@ package com.felix.meratodo.service;
 import com.felix.meratodo.dto.ProjectRequestDto;
 import com.felix.meratodo.dto.ProjectResponseDto;
 import com.felix.meratodo.dto.TaskResponseDto;
+import com.felix.meratodo.dto.UserResponseDto;
+import com.felix.meratodo.enums.PermissionType;
 import com.felix.meratodo.exception.ProjectAlreadyExistsException;
 import com.felix.meratodo.exception.ProjectNotFoundException;
 import com.felix.meratodo.exception.TeamNotFoundException;
@@ -15,7 +17,9 @@ import com.felix.meratodo.model.User;
 import com.felix.meratodo.repository.ProjectRepository;
 import com.felix.meratodo.repository.TaskRepository;
 import com.felix.meratodo.repository.TeamRepository;
+import com.felix.meratodo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,8 +45,24 @@ public class ProjectService {
 
     @Autowired
     private UserService userService;
-    public ProjectResponseDto createProject(ProjectRequestDto dto) {
-        return   projectMapper.toDto(projectRepository.save(projectMapper.toEntity(dto)));
+
+    @Autowired
+    private PermissionService permissionService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+
+    public ProjectResponseDto createProject(ProjectRequestDto dto, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(userId + " Id not found"));
+
+        Project project=projectRepository.save(projectMapper.toEntity(dto));
+        permissionService.grantPermission(user, "PROJECT",project.getId(), PermissionType.PROJECT_UPDATE);
+        permissionService.grantPermission(user, "PROJECT",project.getId(),PermissionType.PROJECT_DELETE);
+        permissionService.grantPermission(user, "PROJECT",project.getId(),PermissionType.PROJECT_READ);
+
+
+        return   projectMapper.toDto(project);
     }
 
 
